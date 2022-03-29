@@ -1,0 +1,41 @@
+### RUTAS PROTEJIDAS CON TOKEN
+
+### Ejemplo ruta 
+GET http://localhost:3000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NDg1NzE3MjMsImV4cCI6MTY0ODY1ODEyMywiYXVkIjoiNjI0MzM1NGI0OTI5ODkxZjAwOGQ2MmJlIiwiaXNzIjoicm9nZXJnY2NAZ21haWwuY29tIn0.vNpFs0ABS0XRICgfMMwqQ124GSPFYOU_CMxhA7LPT7I
+
+### Ejemplo ruta No encontrada
+GET http://localhost:3000/abc_xyz
+
+### 1. Login  = Obtener Token
+POST  http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+    "email":"usuario_1@gmail.com",
+    "password":"1234"
+}
+
+### 1. Register Usuario = Obtener 2 Tokens
+### el 1ro para acceder a las rutas(con tiempo de expiracion)
+### el 2do para obtener tokens nuevos
+POST  http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+    "email":"usuario_1@gmail.com",
+    "password":"1234"
+}
+
+###Refresh Route = utilizando el Refresh Token obtiene nuevos Tokens
+POST  http://localhost:3000/auth/refresh-token
+Content-Type: application/json
+
+{
+    "refreshToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NDg1NzE0OTUsImV4cCI6MTY0ODY1Nzg5NSwiYXVkIjoiNjI0MzMzZWM0OTI5ODkxZjAwOGQ2MmJiIiwiaXNzIjoicm9nZXJnY2NAZ21haWwuY29tIn0.pRl2vnmTrYi4HQFHW9Jhw1T__g9eg6GRRPYs-QHZuZc"
+}
+
+###Logout Route
+DELETE   http://localhost:3000/auth/logout
+
+
