@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config()
+}
+
 const express= require('express')
 const morgan = require('morgan')
 const createError = require('http-errors')
@@ -38,10 +42,15 @@ app.use((err,req,res,next)=>{
 })
 
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT
+const HOST = process.env.HOST
 
-app.listen(PORT,()=>{
-    console.log(`Server running on port ${PORT}`)
-})
+
+app.listen(PORT,function(error){
+    if(error) return console.log(error);
+   
+    console.log(`Servidor corriendo en el Puerto: ${HOST}:${PORT}`);
+});
+
 
 //https://www.coderdump.net/2018/04/automatic-refresh-api-token-with-retrofit-and-okhttp-authenticator.html
