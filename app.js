@@ -6,40 +6,59 @@ const express= require('express')
 const morgan = require('morgan')
 const createError = require('http-errors')
 const { NotFound } = require('http-errors')
-require('dotenv').config()
+
 require('./helpers/init_mongodb')
 const {verifyAccessToken} = require('./helpers/jwt_helpe')
 
 const AuthRoute = require('./routes/Auth.route')
+
+const Router = require("./routes/routes")
+
 
 const app= express()
 app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 
-app.get('/',verifyAccessToken,async(req,res,next)=>{
+// app.get('/',verifyAccessToken,async(req,res,next)=>{
+//     // console.log(req.headers['authorization']);
+    
+//     res.send('Hello from express')
+// })
+
+app.get('/',async(req,res,next)=>{
     // console.log(req.headers['authorization']);
     
-    res.send('Hello from express')
+    res.send('INDEX AUTH SERVICE AND EMAIL SEND')
 })
 
-app.use('/auth',AuthRoute)
 
-app.use(async(req,res,next)=>{
-
-    // next(createError.NotFound('This route doesnt exist'))
-    next(createError.NotFound())
+app.get('/api/verificando',async(req,res,next)=>{
+    // console.log(req.headers['authorization']);
+    
+    res.send('Verificando Email Registrado')
 })
 
-app.use((err,req,res,next)=>{
-    res.status(err.status || 500)
-    res.send({
-        error:{
-            status: err.status || 500,
-            message:err.message
-        }
-    })
-})
+// app.use('/auth',AuthRoute)
+
+app.use("/api",Router)
+
+
+// app.use(async(req,res,next)=>{
+
+//     // next(createError.NotFound('This route doesnt exist'))
+//     next(createError.NotFound())
+// })
+
+// app.use((err,req,res,next)=>{
+//     res.status(err.status || 500)
+//     res.send({
+//         error:{
+//             status: err.status || 500,
+//             message:err.message
+//         }
+//     })
+// })
 
 
 const PORT = process.env.PORT

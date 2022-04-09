@@ -13,7 +13,18 @@ const UserSchema = new Schema({
     password:{
         type:String,
         required:true
-    }
+    },
+
+    imageUser:{ type: String},
+     firstname:{type:String, require:true},
+     lastname:{type:String, require:true},
+     
+     uniqueText:{ type: String, require: true},
+     emailVerificado:{type:Boolean,require:true},
+     connected: {type: Boolean, require: true},
+     google:{type: Boolean, require: true},
+     from:{ type: String, require: true},
+
 })
 UserSchema.pre('save',async function(next) {
     try {

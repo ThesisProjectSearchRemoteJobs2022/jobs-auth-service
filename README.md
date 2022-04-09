@@ -25,19 +25,29 @@
   npm run dev 
 ```
 
-Crear un archivo .env en la raiz
+Crear un archivo .env en la raiz - tomar como ejemplo .env.example
 ```
-PORT=3000
+PORT=4000
 MONGODB_URI=mongodb://localhost:27017
 DB_NAME=auth_jobs_db
 ACCESS_TOKEN_SECRET=[CODIGO_RANDOM_HEX]
 REFRESH_TOKEN_SECRET=[CODIGO_RANDOM_HEX]
+FROM_GMAIL=[CORREOGMAIL]
+PASSWORD_GMAIL=[PASSWORD]
+
 ```
 Version utilado de NodeJS
+
 npm 6.14.14
 
 node v14.17.5
 
+
+[✔] Registro nuevo usuario
+
+[✔] Validacion por correo
+
+[✔] Inicio de Sesion
 
 # Entorno Local
 En el Editor Visual Studio Code:
@@ -45,6 +55,7 @@ instalar la extension `REST Client [humao.rest-client]`
 
 Ejemplos
 en el archivo rest.http
+
 
 1. Register Usuario = Obtener 2 Tokens
 
