@@ -1,6 +1,6 @@
 const Router = require("express").Router();
 
-// const passport = require("../config/passport")
+const passport = require("../config/passport")
 
 
 
@@ -24,8 +24,8 @@ Router.route("/signOut")
 
 
 
-// Router.route("/signInToken")
-// .get(passport.authenticate("jwt", {session:false}), verificarToken)
+Router.route("/signInToken")
+.get(passport.authenticate("jwt", {session:false}), verificarToken)
 
 
 module.exports = Router

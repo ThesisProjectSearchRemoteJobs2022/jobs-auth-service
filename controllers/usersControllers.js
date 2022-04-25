@@ -193,7 +193,7 @@ const usersControllers = {
     },
 
     accesoUsuario: async (req, res) => {
-
+        console.log('RECIBIDO ACCESO USUARIO', req.body)
         const { email, password } = req.body.userData
 
         try {
@@ -231,7 +231,8 @@ const usersControllers = {
     },
 
     cerrarCesion: async (req,res) => {
-
+        
+        console.log('RECIBIDO cerrarCesion', req.body)
         const email = req.body.email
         console.log(req.body.email)
 
@@ -253,7 +254,7 @@ const usersControllers = {
                     lastname:req.user.lastname,
                     email:req.user.email,
                     id:req.user.id}, 
-                    response:"Welcome Back Again" + req.user.firstname })
+                    response:"Welcome Back Again " + req.user.firstname })
         }else{
             res.json({success:false, response:"Please again SingIn"})
         }
