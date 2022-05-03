@@ -53,7 +53,7 @@ const usersControllers = {
     personalizations: [{
       to: `${userName} <${userEmail}>`,
       dynamic_template_data: {
-        subject: `🔔Ahora le notificaremos ofertas laborales de ${jobOfferSearch} `,
+        subject: `🔔 Notificaremos ofertas laborales de ${jobOfferSearch} `,
         items:OfertasTrabajosList,
         customer_name: userName,
         jobs_search:jobOfferSearch

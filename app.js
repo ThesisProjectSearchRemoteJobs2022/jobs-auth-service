@@ -79,6 +79,14 @@ app.get("/api/send-email-jobs", async (req, res, next) => {
     
     let OfertasTrabajosList = []
     OfertasTrabajosList =responseJobs
+    // VALIDAR SI EL USUARIO YA ESTA SUSBSCRITO A RECIBIR NOTITICACIONES
+    // POR AHORA AGREGAR UN ESTADO A TABLA USER  isSubcrite
+    // REFACTORIAS PAARA USAR CONTROLLADOR 
+    // if isSubscrite ==true
+    //   message"ya esta susctio = sucess=false
+    //   res.json({success:false,message : "Ya esta suscrito"})
+    // else
+    //   siguer la ruta normal de envio
 
     const message = emailMessage(emailReceived, name,OfertasTrabajosList.jobs,jobOfferSearch);
     
@@ -93,8 +101,8 @@ app.get("/api/send-email-jobs", async (req, res, next) => {
 
 
   } catch (error) {
-    console.log(error);
-    console.error(error);
+    console.log(error.message);
+    // console.error(error);
     res.json({success:false,message : "ocurrio un error"});
   }
 
