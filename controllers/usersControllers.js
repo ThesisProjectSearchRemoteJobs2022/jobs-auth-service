@@ -9,6 +9,14 @@ const jwt = require("jsonwebtoken");
 const { response } = require("express");
 
 
+const URL_AUTH_SERVICE= process.env.URL_AUTH_SERVICE
+const URL_SCRAP= process.env.URL_SCRAPPING_SERVICE
+const JOBS_DYNAMIC_TEMPLATE_ID= process.env.JOBS_DYNAMIC_TEMPLATE_ID
+
+const axios = require("axios")
+const sendMail = require('@sendgrid/mail');
+
+
 
 async function sendEmail(email,newUser, uniqueText){
     
@@ -62,51 +70,225 @@ async function sendEmail(email,newUser, uniqueText){
     }
 }
 
+const sendEmailSendgrid= async (emailMessage) => {
+    try {
+      const response = await sendMail.send(emailMessage);
+      // console.log(("sendMAIL:",response[0].statusCode));
+      const resp = response[0].statusCode == 202 ? true : false;
+      return resp;
+    } catch (error) {
+      console.error("catch sendEmailSendgrid", error.message);
+      return false;
+    }
+  }
+
+const prepareEmailMessageSendGrid = async (
+    userEmail,
+    userName,
+    OfertasTrabajosList,
+    jobOfferSearch,
+    sandboxMode = false
+  ) => {
+
+
+    return {
+      subject: "Someone claimed some swag!",
+
+      from: "NO-REPLY - JoBoardDev Co <rogercolquecalcina@gmail.com>",
+      templateId: JOBS_DYNAMIC_TEMPLATE_ID,
+
+      
+      personalizations: [
+        {
+          to: `${userName} <${userEmail}>`,
+          dynamic_template_data: {
+            subject: `🔔 Notificaremos ofertas laborales de ${jobOfferSearch} `,
+            items: OfertasTrabajosList,
+            customer_name: userName,
+            jobs_search: jobOfferSearch,
+          },
+        },
+      ],
+      mail_settings: {
+        sandbox_mode: {
+          enable: sandboxMode,
+        },
+      },
+    };
+  }
+
+  
+const  prepareVerifyEmailSendGrid = (userEmail,newUser, verification_token,sandboxMode=false) => {
+    const { firstname, lastname, email } = newUser; //
+
+    return {
+      to: email,
+      from: {
+        name: 'NO-REPLY - Jobs Remote Co',
+        email: 'rogercolquecalcina@gmail.com',
+      },
+      
+      templateId: process.env.VERIFY_EMAIL_TEMPLATE_ID,
+      dynamicTemplateData: {
+        customer_name: firstname,
+        verification_token:
+          process.env.NODE_ENV !== 'prod'
+            // ? `http://localhost:3000/auth/${verification_token}`
+            ? `${URL_AUTH_SERVICE}/api/verify/${verification_token}`
+            : `https://jobs-auth-service.herokuapp.com/api/verify/${verification_token}`,
+      },
+      mail_settings: {
+      sandbox_mode: {
+        enable: sandboxMode
+      }
+    }
+    };
+  }
 const usersControllers = {
+  subscribirSeEmail: async (req, res) => {
+    //es el controlador que recibe el click del usuario en el email
+    // const { uniqueText } = req.params;
 
-    verifyEmail: async (req, res) => { //es el controlador que recibe el click del usuario en el email
-        const { uniqueText } = req.params
-        const user = await User.findOne({ uniqueText: uniqueText })
-        if (user) {
-            user.emailVerificado = true
-            await user.save()
-            // res.redirect("https://itinerarioapp.herokuapp.com/signin")
-            res.redirect("http://localhost:4000/api/verificando")
+    const emailReceived = req.query.email;
+    console.log(req.query)
+    jobOfferSearch = req.query.trabajo;
+
+    
+
+    
+    const URL = `${URL_SCRAP}/getJobs?trabajo=${jobOfferSearch}`; // /api/v1/getJobs?trabajo=android
+
+    console.log('url scrap:', URL)
+    try {
+      const user = await User.findOne({ email: emailReceived });
+      if (!user) {
+        res.json({
+          success: false,
+          response: "e-mail could not found",
+          message: "e-mail could not found"
+        });
+        return
+      }
+      if (user.emailVerificado == false) {
+        res.json({
+          success: false,
+          response: "e-mail could not be verified",
+          message: "e-mail could not be verified"
+        });
+        return
+      }
+
+      if (user.isSubscribeEmail) {
+        res.json({
+          success: false,
+          response: "already subscribe to "+jobOfferSearch,
+          message: "already subscribe to "+user.subscribeTopic
+        });
+        
+        return
+      }
+
+      var config = {
+        method: "get",
+        url: URL,
+        headers: {},
+      };
+
+      const response = await axios(config);
+
+      const responseJobs = await response.data;
+
+      if (responseJobs.success == false) {
+        res.json({ success: false, message: "Sin conexion" });
+        return;
+      }
+
+      let OfertasTrabajosList = [];
+      OfertasTrabajosList = responseJobs;
+
+      const message = await prepareEmailMessageSendGrid(
+        emailReceived,
+        "user name",
+        OfertasTrabajosList.jobs,
+        jobOfferSearch
+      );
+
+    //   console.log('BEFORE SEND CONFIG EMAIL: ', JSON.stringify(message))
+      const responseSendEmail = await sendEmailSendgrid(message);
+      if (responseSendEmail == false) {
+        res.json({ success: false, message: "No se envio correos" });
+        return;
+      }
+
+      user.isSubscribeEmail = true;
+      
+      user.subscribeTopic = jobOfferSearch;
+      
+      await user.save();
+
+      res.json({ success: true, message: "Correo Enviado" });
+
+    } catch (error) {
+      console.log("catch error Send:",error.message);
+      // console.error(error);
+      res.json({ success: false, message: "ocurrio un error" });
+    }
+
+    
+
+    
+  },
+
+  verifyEmail: async (req, res) => {
+    //es el controlador que recibe el click del usuario en el email
+    const { uniqueText } = req.params;
+    const user = await User.findOne({ uniqueText: uniqueText });
+    if (user) {
+      user.emailVerificado = true;
+      await user.save();
+      // res.redirect("https://itinerarioapp.herokuapp.com/signin")
+      res.redirect(`${URL_AUTH_SERVICE}/api/verificando`);
+    } else {
+      res.json({
+        success: false,
+        response: "Your e-mail could not be verified",
+      });
+    }
+  },
+
+  nuevoUsuario: async (req, res) => {
+    const { imageUser, firstname, lastname, email, password, from } =
+      req.body.NuevoUsuario; // destructuring
+
+    try {
+      const usuarioExiste = await User.findOne({ email });
+      console.log(req.body);
+      if (usuarioExiste) {
+        /* Facebook start if */
+        if (from !== "SignUp") {
+          const passwordHash = bcryptjs.hashSync(password, 10);
+          usuarioExiste.imageUser = imageUser;
+          usuarioExiste.password = passwordHash;
+          usuarioExiste.emailVerificado = true;
+          usuarioExiste.from = from;
+          usuarioExiste.connected = false;
+
+          usuarioExiste.save();
+          res.json({
+            success: true,
+            response: "I update the singin, now you can do it with" + from,
+          });
+        } else {
+          res.json({
+            success: false,
+            response: "The username is already in use",
+          });
         }
-        else {
-            res.json({ success: false, response: "Your e-mail could not be verified" })
-        }
-    },
+        /* Facebook end if */
 
-    nuevoUsuario: async (req, res) => {
+        /* Google start if */
 
-        const { imageUser, firstname, lastname, email, password, from } = req.body.NuevoUsuario // destructuring
-
-        try {
-
-            const usuarioExiste = await User.findOne({ email })
-            console.log(req.body)
-            if (usuarioExiste) {
-              
-                /* Facebook start if */
-                if(from !== "SignUp"){
-                    const passwordHash = bcryptjs.hashSync(password, 10)
-                    usuarioExiste.imageUser=imageUser;
-                    usuarioExiste.password= passwordHash;
-                    usuarioExiste.emailVerificado= true;
-                    usuarioExiste.from= from;
-                    usuarioExiste.connected= false; 
-
-                    usuarioExiste.save();
-                    res.json({success:true, response:"I update the singin, now you can do it with"+ from})        
-                }else{
-                    res.json({success:false, response:"The username is already in use"})
-                }
-                 /* Facebook end if */
-
-                  /* Google start if */                     
-             
-               /*   if(google){                
+        /*   if(google){                
                     const passwordHash = bcryptjs.hashSync(password, 10)
                     usuarioExiste.password= passwordHash;
                     usuarioExiste.emailVerificado= true;
@@ -120,55 +302,69 @@ const usersControllers = {
                     res.json({success:false, from:"SignUp", response:"Este email ya esta en uso, por favor realiza singIN"})                   
 
                 }*/
-                 /*google end if */
-                
+        /*google end if */
+      } /* final de if de usuario existe */ else {
+        /* start else del if de usuario existe */
+        const emailVerificado = false;
+        const uniqueText = crypto.randomBytes(15).toString("hex"); //texto randon de 15 caracteres hexadecimal
+        const passwordHash = bcryptjs.hashSync(password, 10);
 
-             } /* final de if de usuario existe */
-             
-             else { /* start else del if de usuario existe */
-                const emailVerificado = false
-                const uniqueText = crypto.randomBytes(15).toString("hex") //texto randon de 15 caracteres hexadecimal                
-                const passwordHash = bcryptjs.hashSync(password, 10)
+        const newUser = new User({
+          imageUser,
+          firstname,
+          lastname,
+          email,
+          password: passwordHash,
+          uniqueText, //busca la coincidencia del texto
+          emailVerificado,
+          connected: false,
+          from,
+        });
+        console.log(newUser.imageUser);
 
-                const newUser = new User({
-                    imageUser,
-                    firstname,
-                    lastname,
-                    email,
-                    password: passwordHash,
-                    uniqueText, //busca la coincidencia del texto
-                    emailVerificado,
-                    connected:false,
-                    from,
-                })
-                console.log(newUser.imageUser)
+        /* Facebook start else */
 
-                 /* Facebook start else */
+        if (from !== "SignUp") {
+          newUser.emailVerificado = true;
+          newUser.from = from;
+          newUser.connected = false;
 
-                if (from !== "SignUp") {
-                    newUser.emailVerificado=true;
-                    newUser.from= from;
-                    newUser.connected=false;
-                    
-                    await newUser.save()
+          await newUser.save();
 
-                    res.json({success:true,data:{newUser},response:"Congratulations we have created your user with"+"" +from})
-                }else{
-                    newUser.emailVerificado=false;
-                    newUser.from= from;
-                    newUser.connected= false;
+          res.json({
+            success: true,
+            data: { newUser },
+            response:
+              "Congratulations we have created your user with" + "" + from,
+          });
+        } else {
+          newUser.emailVerificado = false;
+          newUser.from = from;
+          newUser.connected = false;
 
-                    await newUser.save();
-                    await sendEmail(email,newUser, uniqueText);
+          await newUser.save();
+        //   await sendEmail(email, newUser, uniqueText);
+            const messagePrepared =  prepareVerifyEmailSendGrid(email, newUser, uniqueText);
+          
+          const responseSendEmail = await sendEmailSendgrid(messagePrepared);
 
-                    res.json({ success:true, response: "We have sent an e-mail to verify your e-mail address" , data:{newUser}})
+          if (responseSendEmail == false) {
+            res.json({ success: false,response: "e-mail don't send", message: "No se envio correos" });
+            return;
+          }
 
-                }
+          
+          res.json({
+            success: true,
+            response: "We have sent an e-mail to verify your e-mail address",
+            data: { newUser },
+          });
+        } /* google end else */
 
-                /* Facebook end else */
+        /* Facebook end else */
 
-                /* Google start else */
-              /*  if(google){
+        /* Google start else */
+        /*  if(google){
                     newUser.emailVerificado= true;
                     newUser.google=true,
                     newUser.connected= false,
@@ -186,80 +382,112 @@ const usersControllers = {
                     await newUser.save()
                     await sendEmail(email, uniqueText)
                     res.json({ success:true, from:"SingUp", response: "We have sent an e-mail to verify your e-mail address" , data:{newUser}})
-                } *//* google end else */
-            }/* final del else de usuario existe */
-        }/* final de try */
-        catch (error) { res.json({ success: "falseVAL",from:"SingUp",  response:"The mail is already in use", error: error }) }
-    },
-
-    accesoUsuario: async (req, res) => {
-        console.log('RECIBIDO ACCESO USUARIO', req.body)
-        const { email, password } = req.body.userData
-
-        try {
-            const usuario = await User.findOne({ email })
-
-            if (!usuario) {
-                res.json({ success: false, from: "controller", error: "The username and/or password is incorrect" })
-            }
-            else {
-                if (usuario.emailVerificado) {
-                    let passwordCoincide = bcryptjs.compareSync(password, usuario.password)
-
-                    if (passwordCoincide) {
-                        
-                        const datosUser = {
-                            imageUser:usuario.imageUser,
-                            firstname: usuario.firstname,
-                            lastname: usuario.lastname,
-                            email: usuario.email,
-                            id:usuario._id
-                        }
-                        usuario.connected=true
-                        await usuario.save()
-                        const token = jwt.sign({...datosUser }, process.env.ACCESS_TOKEN_SECRET, {expiresIn:60*60*24})
-
-                        res.json({ success: true, from: "controller", response: { token, datosUser } }) // "logueado" })
-                    }
-                    else { res.json({ success: false, from: "controller", error: "The username and/or password is incorrect" }) }
-                }
-                else { res.json({ success: false, from: "controller", error: "Verify your e-mail to validate yourself" }) }
-            }
-        }
-        catch (error) { console.log(error); res.json({ success: false, response: null, error: error }) }
-
-    },
-
-    cerrarCesion: async (req,res) => {
-        
-        console.log('RECIBIDO cerrarCesion', req.body)
-        const email = req.body.email
-        console.log(req.body.email)
-
-        const user = await User.findOne({email})
-
-       /*  user.connected=false */
-
-        await user.save()
-        res.json({success:true, response:"Closed assignment"})
-
-    },
-
-    verificarToken: async(req, res)=>{
-        if(!req.error){
-            res.json({success:true, 
-                datosUser:{   
-                    imageUser:req.user.imageUser,           
-                    firstname:req.user.firstname, 
-                    lastname:req.user.lastname,
-                    email:req.user.email,
-                    id:req.user.id}, 
-                    response:"Welcome Back Again " + req.user.firstname })
-        }else{
-            res.json({success:false, response:"Please again SingIn"})
-        }
+                } */
+      } /* final del else de usuario existe */
+    } catch (error) {
+      /* final de try */
+      console.log("catch error", error)
+      res.json({
+        success: "falseVAL",
+        from: "SingUp",
+        response: "The mail is already in use",
+        error: error,
+      });
     }
+  },
 
+  accesoUsuario: async (req, res) => {
+    console.log("RECIBIDO ACCESO USUARIO", req.body);
+    const { email, password } = req.body.userData;
+
+    try {
+      const usuario = await User.findOne({ email });
+
+      if (!usuario) {
+        res.json({
+          success: false,
+          from: "controller",
+          error: "The username and/or password is incorrect",
+        });
+      } else {
+        if (usuario.emailVerificado) {
+          let passwordCoincide = bcryptjs.compareSync(
+            password,
+            usuario.password
+          );
+
+          if (passwordCoincide) {
+            const datosUser = {
+              imageUser: usuario.imageUser,
+              firstname: usuario.firstname,
+              lastname: usuario.lastname,
+              email: usuario.email,
+              id: usuario._id,
+            };
+            usuario.connected = true;
+            await usuario.save();
+            const token = jwt.sign(
+              { ...datosUser },
+              process.env.ACCESS_TOKEN_SECRET,
+              { expiresIn: 60 * 60 * 24 }
+            );
+
+            res.json({
+              success: true,
+              from: "controller",
+              response: { token, datosUser },
+            }); // "logueado" })
+          } else {
+            res.json({
+              success: false,
+              from: "controller",
+              error: "The username and/or password is incorrect",
+            });
+          }
+        } else {
+          res.json({
+            success: false,
+            from: "controller",
+            error: "Verify your e-mail to validate yourself",
+          });
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      res.json({ success: false, response: null, error: error });
+    }
+  },
+
+  cerrarCesion: async (req, res) => {
+    console.log("RECIBIDO cerrarCesion", req.body);
+    const email = req.body.email;
+    // console.log(req.body.email);
+
+    const user = await User.findOne({ email });
+
+    /*  user.connected=false */
+
+    await user.save();
+    res.json({ success: true, response: "Closed assignment" });
+  },
+
+  verificarToken: async (req, res) => {
+    if (!req.error) {
+      res.json({
+        success: true,
+        datosUser: {
+          imageUser: req.user.imageUser,
+          firstname: req.user.firstname,
+          lastname: req.user.lastname,
+          email: req.user.email,
+          id: req.user.id,
+        },
+        response: "Welcome Back Again " + req.user.firstname,
+      });
+    } else {
+      res.json({ success: false, response: "Please again SingIn" });
+    }
+  },
 };
 
 

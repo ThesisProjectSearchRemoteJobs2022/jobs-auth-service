@@ -49,7 +49,11 @@ app.get('/api/verificando',async(req,res,next)=>{
 const { emailMessage, sendEmail } = require('./advanced-email');
 
 
+//deprecated
 app.get("/api/send-email-jobs", async (req, res, next) => {
+
+  // const { imageUser, firstname, lastname, email, password, from } = req.body.dataObject
+  
   console.log('send init');
   const emails = 'rogcolquehuancac@gmail.com';
   const name = 'Roger Colqueh';
@@ -79,6 +83,8 @@ app.get("/api/send-email-jobs", async (req, res, next) => {
     
     let OfertasTrabajosList = []
     OfertasTrabajosList =responseJobs
+
+    
     // VALIDAR SI EL USUARIO YA ESTA SUSBSCRITO A RECIBIR NOTITICACIONES
     // POR AHORA AGREGAR UN ESTADO A TABLA USER  isSubcrite
     // REFACTORIAS PAARA USAR CONTROLLADOR 
@@ -96,7 +102,8 @@ app.get("/api/send-email-jobs", async (req, res, next) => {
         return
     }
 
-    res.json({success:true,message : "enviado"});
+
+    res.json({success:true,message : "Correo Enviado"});
     
 
 
@@ -130,13 +137,13 @@ app.use("/api",Router)
 
 const PORT = process.env.PORT
 const HOST = process.env.HOST
-
+const URL_AUTH_SERVICE= process.env.URL_AUTH_SERVICE
 
 app.listen(PORT,function(error){
     if(error) return console.log(error);
    
-    console.log(`Servidor corriendo en el Puerto: ${HOST}:${PORT}`);
-    console.log(`enviar correos Subscripcion: ${HOST}:${PORT}/api/send-email-jobs`);
+    console.log(`Servidor corriendo en el Puerto: ${URL_AUTH_SERVICE}`);
+    console.log(`enviar correos Subscripcion: ${URL_AUTH_SERVICE}/api/send-email-jobs`);
 });
 
 
