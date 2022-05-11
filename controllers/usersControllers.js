@@ -16,7 +16,7 @@ const JOBS_DYNAMIC_TEMPLATE_ID= process.env.JOBS_DYNAMIC_TEMPLATE_ID
 const axios = require("axios")
 const sendMail = require('@sendgrid/mail');
 
-
+const message = require("../config/index")
 
 async function sendEmail(email,newUser, uniqueText){
     
@@ -153,9 +153,6 @@ const usersControllers = {
     console.log(req.query)
     jobOfferSearch = req.query.trabajo;
 
-    
-
-    
     const URL = `${URL_SCRAP}/getJobs?trabajo=${jobOfferSearch}`; // /api/v1/getJobs?trabajo=android
 
     console.log('url scrap:', URL)
@@ -164,16 +161,16 @@ const usersControllers = {
       if (!user) {
         res.json({
           success: false,
-          response: "e-mail could not found",
-          message: "e-mail could not found"
+          response: "e-mail no existe",
+          message: "e-mail no existe"
         });
         return
       }
       if (user.emailVerificado == false) {
         res.json({
           success: false,
-          response: "e-mail could not be verified",
-          message: "e-mail could not be verified"
+          response: "e-mail no verificado, revise el correo enviado a Gmail",
+          message: "e-mail no verificado, revise el correo enviado a Gmail"
         });
         return
       }
@@ -181,8 +178,8 @@ const usersControllers = {
       if (user.isSubscribeEmail) {
         res.json({
           success: false,
-          response: "already subscribe to "+jobOfferSearch,
-          message: "already subscribe to "+user.subscribeTopic
+          response: "ya esta susbcrito a "+jobOfferSearch,
+          message: "ya esta susbcrito a "+user.subscribeTopic
         });
         
         return
@@ -251,7 +248,7 @@ const usersControllers = {
     } else {
       res.json({
         success: false,
-        response: "Your e-mail could not be verified",
+        response: "Su correo electrónico no pudo ser verificado",
       });
     }
   },
@@ -276,12 +273,13 @@ const usersControllers = {
           usuarioExiste.save();
           res.json({
             success: true,
-            response: "I update the singin, now you can do it with" + from,
+            response: "Actualizo el inicio de sesion, ahora puedes hacerlo con" + from,
           });
         } else {
           res.json({
             success: false,
-            response: "The username is already in use",
+            
+            response: message.user.EMAIL_TAKEN,
           });
         }
         /* Facebook end if */
@@ -335,7 +333,7 @@ const usersControllers = {
             success: true,
             data: { newUser },
             response:
-              "Congratulations we have created your user with" + "" + from,
+              "Se creo el usuario con" + "" + from,
           });
         } else {
           newUser.emailVerificado = false;
@@ -349,14 +347,14 @@ const usersControllers = {
           const responseSendEmail = await sendEmailSendgrid(messagePrepared);
 
           if (responseSendEmail == false) {
-            res.json({ success: false,response: "e-mail don't send", message: "No se envio correos" });
+            res.json({ success: false,response: "e-mail para verficacion no enviado", message: "No se envio correos" });
             return;
           }
 
           
           res.json({
             success: true,
-            response: "We have sent an e-mail to verify your e-mail address",
+            response: "Hemos enviado un correo electrónico para verificar su dirección de correo electrónico",
             data: { newUser },
           });
         } /* google end else */
@@ -390,7 +388,7 @@ const usersControllers = {
       res.json({
         success: "falseVAL",
         from: "SingUp",
-        response: "The mail is already in use",
+        response: "Este correo ya esta siendo usado",
         error: error,
       });
     }
@@ -407,7 +405,7 @@ const usersControllers = {
         res.json({
           success: false,
           from: "controller",
-          error: "The username and/or password is incorrect",
+          error: "El nombre de usuario y/o la contraseña son incorrectos",
         });
       } else {
         if (usuario.emailVerificado) {
@@ -441,14 +439,14 @@ const usersControllers = {
             res.json({
               success: false,
               from: "controller",
-              error: "The username and/or password is incorrect",
+              error: "El nombre de usuario y/o la contraseña son incorrectos",
             });
           }
         } else {
           res.json({
             success: false,
             from: "controller",
-            error: "Verify your e-mail to validate yourself",
+            error: "Verifica tu correo electrónico para validarte",
           });
         }
       }
@@ -482,10 +480,10 @@ const usersControllers = {
           email: req.user.email,
           id: req.user.id,
         },
-        response: "Welcome Back Again " + req.user.firstname,
+        response: "Bienvenido de nuevo " + req.user.firstname,
       });
     } else {
-      res.json({ success: false, response: "Please again SingIn" });
+      res.json({ success: false, response: "Inicie sesión de nuevo" });
     }
   },
 };

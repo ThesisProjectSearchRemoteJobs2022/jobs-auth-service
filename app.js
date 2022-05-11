@@ -41,79 +41,10 @@ app.get('/',async(req,res,next)=>{
 app.get('/api/verificando',async(req,res,next)=>{
     // console.log(req.headers['authorization']);
     
-    res.send('Verificando Email Registrado')
+    res.send('Email Verficado')
 })
 
 // app.use('/auth',AuthRoute)
-
-const { emailMessage, sendEmail } = require('./advanced-email');
-
-
-//deprecated
-app.get("/api/send-email-jobs", async (req, res, next) => {
-
-  // const { imageUser, firstname, lastname, email, password, from } = req.body.dataObject
-  
-  console.log('send init');
-  const emails = 'rogcolquehuancac@gmail.com';
-  const name = 'Roger Colqueh';
-  let jobOfferSearch = 'Web';
-
-  const emailReceived = req.query.email;
-  
-  jobOfferSearch = req.query.trabajo;
-
-  const URL = `http://localhost:3002/api/v1/getJobs?trabajo=${jobOfferSearch}` // /api/v1/getJobs?trabajo=android
-  try {
-    var config = {
-      method: 'get',
-      url: URL,
-      headers: { }
-    };
-
-    const response = await axios(config)
-
-    const responseJobs = await response.data;
-    
-
-    if(responseJobs.success==false){
-        res.json({success:false,message : "Sin conexion"});
-        return
-    }
-    
-    let OfertasTrabajosList = []
-    OfertasTrabajosList =responseJobs
-
-    
-    // VALIDAR SI EL USUARIO YA ESTA SUSBSCRITO A RECIBIR NOTITICACIONES
-    // POR AHORA AGREGAR UN ESTADO A TABLA USER  isSubcrite
-    // REFACTORIAS PAARA USAR CONTROLLADOR 
-    // if isSubscrite ==true
-    //   message"ya esta susctio = sucess=false
-    //   res.json({success:false,message : "Ya esta suscrito"})
-    // else
-    //   siguer la ruta normal de envio
-
-    const message = emailMessage(emailReceived, name,OfertasTrabajosList.jobs,jobOfferSearch);
-    
-    const responseSendEmail = sendEmail(message);
-    if(responseSendEmail==false){
-        res.json({success:false,message : "No se envio correos"})
-        return
-    }
-
-
-    res.json({success:true,message : "Correo Enviado"});
-    
-
-
-  } catch (error) {
-    console.log(error.message);
-    // console.error(error);
-    res.json({success:false,message : "ocurrio un error"});
-  }
-
-});
 
 app.use("/api",Router)
 
