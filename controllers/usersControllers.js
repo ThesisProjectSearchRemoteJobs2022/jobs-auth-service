@@ -411,49 +411,54 @@ const usersControllers = {
           from: "controller",
           error: "El nombre de usuario y/o la contraseña son incorrectos",
         });
-      } else {
-        if (usuario.emailVerificado) {
-          let passwordCoincide = bcryptjs.compareSync(
-            password,
-            usuario.password
-          );
 
-          if (passwordCoincide) {
-            const datosUser = {
-              imageUser: usuario.imageUser,
-              firstname: usuario.firstname,
-              lastname: usuario.lastname,
-              email: usuario.email,
-              id: usuario._id,
-            };
-            usuario.connected = true;
-            await usuario.save();
-            const token = jwt.sign(
-              { ...datosUser },
-              process.env.ACCESS_TOKEN_SECRET,
-              { expiresIn: 60 * 60 * 24 }
-            );
-
-            res.json({
-              success: true,
-              from: "controller",
-              response: { token, datosUser },
-            }); // "logueado" })
-          } else {
-            res.json({
-              success: false,
-              from: "controller",
-              error: "El nombre de usuario y/o la contraseña son incorrectos",
-            });
-          }
-        } else {
-          res.json({
-            success: false,
-            from: "controller",
-            error: "Verifica tu correo electrónico para validarte",
-          });
-        }
+        return
       }
+
+      // if (usuario.emailVerificado == false) {
+      //   res.json({
+      //     success: false,
+      //     from: "controller",
+      //     error: "Verifica tu correo electrónico Gmail para validarte",
+      //   });
+      //   return
+      // }
+
+      let passwordCoincide = bcryptjs.compareSync(password, usuario.password);
+
+      if (passwordCoincide == false) {
+        res.json({
+          success: false,
+          from: "controller",
+          error: "El nombre de usuario y/o la contraseña son incorrectos",
+        });
+        return
+      }
+
+      const datosUser = {
+        imageUser: usuario.imageUser,
+        firstname: usuario.firstname,
+        lastname: usuario.lastname,
+        email: usuario.email,
+        id: usuario._id,
+      };
+      
+      usuario.connected = true;
+      await usuario.save();
+
+      const token = jwt.sign(
+        { ...datosUser },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: 60 * 60 * 24 }
+      );
+
+      res.json({
+        success: true,
+        from: "controller",
+        response: { token, datosUser },
+      });
+      
+
     } catch (error) {
       console.log(error);
       res.json({ success: false, response: null, error: error });
