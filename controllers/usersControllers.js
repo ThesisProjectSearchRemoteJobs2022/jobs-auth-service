@@ -77,7 +77,9 @@ const sendEmailSendgrid= async (emailMessage) => {
       const resp = response[0].statusCode == 202 ? true : false;
       return resp;
     } catch (error) {
+
       console.error("catch sendEmailSendgrid", error.message);
+      console.error("catch sendEmailSendgrid", error);
       return false;
     }
   }
@@ -166,14 +168,15 @@ const usersControllers = {
         });
         return
       }
-      if (user.emailVerificado == false) {
-        res.json({
-          success: false,
-          response: "e-mail no verificado, revise el correo enviado a Gmail",
-          message: "e-mail no verificado, revise el correo enviado a Gmail"
-        });
-        return
-      }
+      
+      // if (user.emailVerificado == false) {
+      //   res.json({
+      //     success: false,
+      //     response: "e-mail no verificado, revise el correo enviado a Gmail",
+      //     message: "e-mail no verificado, revise el correo enviado a Gmail"
+      //   });
+      //   return
+      // }
 
       if (user.isSubscribeEmail) {
         res.json({
@@ -318,7 +321,7 @@ const usersControllers = {
           connected: false,
           from,
         });
-        console.log(newUser.imageUser);
+        //console.log(newUser.imageUser);
 
         /* Facebook start else */
 
@@ -342,6 +345,7 @@ const usersControllers = {
 
           await newUser.save();
         //   await sendEmail(email, newUser, uniqueText);
+
             const messagePrepared =  prepareVerifyEmailSendGrid(email, newUser, uniqueText);
           
           const responseSendEmail = await sendEmailSendgrid(messagePrepared);
