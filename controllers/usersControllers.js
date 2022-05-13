@@ -18,6 +18,8 @@ const sendMail = require('@sendgrid/mail');
 
 const message = require("../config/index")
 
+sendMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 async function sendEmail(email,newUser, uniqueText){
     
     try {
@@ -169,14 +171,14 @@ const usersControllers = {
         return
       }
       
-      // if (user.emailVerificado == false) {
-      //   res.json({
-      //     success: false,
-      //     response: "e-mail no verificado, revise el correo enviado a Gmail",
-      //     message: "e-mail no verificado, revise el correo enviado a Gmail"
-      //   });
-      //   return
-      // }
+      if (user.emailVerificado == false) {
+        res.json({
+          success: false,
+          response: "e-mail no verificado, revise el correo enviado a Gmail",
+          message: "e-mail no verificado, revise el correo enviado a Gmail"
+        });
+        return
+      }
 
       if (user.isSubscribeEmail) {
         res.json({
@@ -403,9 +405,9 @@ const usersControllers = {
     const { email, password } = req.body.userData;
 
     try {
-      const usuario = await User.findOne({ email });
+      const user = await User.findOne({ email });
 
-      if (!usuario) {
+      if (!user) {
         res.json({
           success: false,
           from: "controller",
@@ -415,16 +417,16 @@ const usersControllers = {
         return
       }
 
-      // if (usuario.emailVerificado == false) {
-      //   res.json({
-      //     success: false,
-      //     from: "controller",
-      //     error: "Verifica tu correo electrónico Gmail para validarte",
-      //   });
-      //   return
-      // }
+      if (user.emailVerificado == false) {
+        res.json({
+          success: false,
+          from: "controller",
+          error: "Verifica tu correo electrónico Gmail para validarte",
+        });
+        return
+      }
 
-      let passwordCoincide = bcryptjs.compareSync(password, usuario.password);
+      let passwordCoincide = bcryptjs.compareSync(password, user.password);
 
       if (passwordCoincide == false) {
         res.json({
@@ -436,15 +438,15 @@ const usersControllers = {
       }
 
       const datosUser = {
-        imageUser: usuario.imageUser,
-        firstname: usuario.firstname,
-        lastname: usuario.lastname,
-        email: usuario.email,
-        id: usuario._id,
+        imageUser: user.imageUser,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        id: user._id,
       };
       
-      usuario.connected = true;
-      await usuario.save();
+      user.connected = true;
+      await user.save();
 
       const token = jwt.sign(
         { ...datosUser },

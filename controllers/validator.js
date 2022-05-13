@@ -7,21 +7,21 @@ const Schema=joi.object({
     imageUser:joi.string().required(),
     
     firstname:joi.string().max(40).min(3).trim().pattern(new RegExp("[a-zA-Z]")).required().messages({
-        "string.min":"Name must contain at least 3 characters",
-        "string.empty":"The field cannot be empty"
+        "string.min":"El nombre debe contener al menos 3 caracteres",
+        "string.empty":"El campo no puede estar vacío"
     }),
     lastname:joi.string().max(20).min(3).trim().pattern(new RegExp("[a-zA-Z]")).required().messages({
 
-        "string.min":"Last name must contain at least 3 characters",
-        "string.empty":"The field cannot be empty"
+        "string.min":"Last El nombre debe contener al menos 3 caracteres",
+        "string.empty":"El campo no puede estar vacío"
     }),
     email:joi.string().email({minDomainSegments:2}).required().messages({
-        "string.email":"Invalid email format"
+        "string.email":"Formato de correo inválido"
     }),
     password:joi.string().max(30).min(6).pattern(/(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])/).required().messages({
-        "string.pattern.base":"The password must contain at least one uppercase, one lowercase and one number.",
-        "string.min":"The password must contain at least 6 alphanumeric characters",
-        "string.max":"The password must not exceed 30 alphanumeric characters"
+        "string.pattern.base":"La contraseña debe contener al menos una mayúscula, una minúscula y un número.",
+        "string.min":"La contraseña debe contener al menos 6 caracteres alfanuméricos",
+        "string.max":"La contraseña no debe exceder los 30 caracteres alfanuméricos"
     }),  
    /*  google:joi.boolean(), */
     from: joi.string()
