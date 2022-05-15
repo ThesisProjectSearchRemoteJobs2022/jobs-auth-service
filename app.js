@@ -21,6 +21,9 @@ app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 
+// app.use(express.static(path.join(__dirname, "../public")));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: false }));
 // app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cors());
@@ -49,21 +52,21 @@ app.get('/api/verificando',async(req,res,next)=>{
 app.use("/api",Router)
 
 
-// app.use(async(req,res,next)=>{
+app.use(async(req,res,next)=>{
 
-//     // next(createError.NotFound('This route doesnt exist'))
-//     next(createError.NotFound())
-// })
+    next(createError.NotFound('This route doesnt exist'))
+    // next(createError.NotFound())
+})
 
-// app.use((err,req,res,next)=>{
-//     res.status(err.status || 500)
-//     res.send({
-//         error:{
-//             status: err.status || 500,
-//             message:err.message
-//         }
-//     })
-// })
+app.use((err,req,res,next)=>{
+    res.status(err.status || 500)
+    res.send({
+        error:{
+            status: err.status || 500,
+            message:err.message
+        }
+    })
+})
 
 
 const PORT = process.env.PORT

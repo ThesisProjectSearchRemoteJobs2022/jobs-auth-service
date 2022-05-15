@@ -259,8 +259,7 @@ const usersControllers = {
   },
 
   nuevoUsuario: async (req, res) => {
-    const { imageUser, firstname, lastname, email, password, from } =
-      req.body.NuevoUsuario; // destructuring
+    const { imageUser, firstname, lastname, email, password, from } = req.body.NuevoUsuario; 
 
     try {
       const usuarioExiste = await User.findOne({ email });
@@ -322,6 +321,7 @@ const usersControllers = {
           emailVerificado,
           connected: false,
           from,
+          
         });
         //console.log(newUser.imageUser);
 
@@ -344,11 +344,13 @@ const usersControllers = {
           newUser.emailVerificado = false;
           newUser.from = from;
           newUser.connected = false;
+          newUser.isSubscribeEmail = false;
+          newUser.subscribeTopic = '';
 
           await newUser.save();
         //   await sendEmail(email, newUser, uniqueText);
 
-            const messagePrepared =  prepareVerifyEmailSendGrid(email, newUser, uniqueText);
+          const messagePrepared =  prepareVerifyEmailSendGrid(email, newUser, uniqueText);
           
           const responseSendEmail = await sendEmailSendgrid(messagePrepared);
 
