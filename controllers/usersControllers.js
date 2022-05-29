@@ -183,8 +183,8 @@ const usersControllers = {
       if (user.isSubscribeEmail) {
         res.json({
           success: false,
-          response: "ya esta susbcrito a "+jobOfferSearch,
-          message: "ya esta susbcrito a "+user.subscribeTopic
+          response: "Ya esta subscrito a empleos de "+jobOfferSearch,
+          message: "Ya esta subscrito a empleos de "+user.subscribeTopic
         });
         
         return
@@ -228,7 +228,7 @@ const usersControllers = {
       
       await user.save();
 
-      res.json({ success: true, message: "Correo Enviado" });
+      res.json({ success: true, message: "Se ha subscrito a recibir correos" });
 
     } catch (error) {
       console.log("catch error Send:",error.message);

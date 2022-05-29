@@ -11,8 +11,8 @@ const Schema=joi.object({
         "string.empty":"El campo no puede estar vacío"
     }),
     lastname:joi.string().max(20).min(3).trim().pattern(new RegExp("[a-zA-Z]")).required().messages({
-
-        "string.min":"Last El nombre debe contener al menos 3 caracteres",
+        "string.pattern.base":"Campo Apellido No valido",
+        "string.min":"El apellido debe contener al menos 3 caracteres",
         "string.empty":"El campo no puede estar vacío"
     }),
     email:joi.string().email({minDomainSegments:2}).required().messages({
